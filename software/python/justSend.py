@@ -17,10 +17,9 @@ def writeServoPositionsToSerial(servoPosArr):
     global rollValueFiltered
     global pitchValueFiltered
     
-    # firstMap = servoPosArr[0]*(180/1919)
-    # secondMap = servoPosArr[1]*(180/1079)
     firstConvert = math.floor(servoPosArr[0])
     secondConvert = math.floor(servoPosArr[1])
+    
     #Filter Values
     rollValueFiltered = math.floor((firstConvert * filterPercentage) + (rollValueFiltered * (1-filterPercentage)))
     pitchValueFiltered = math.floor((secondConvert * filterPercentage) + (pitchValueFiltered * (1-filterPercentage)))
