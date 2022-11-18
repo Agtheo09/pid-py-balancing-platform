@@ -30,6 +30,8 @@ centerOfScreen = [0, 0]
 
 ballLocalization = BallLocalization()
 
+blackImg = np.zeros((512, 512, 1), dtype = "uint8")
+
 # Write Data to Serial
 def writeServoPositionsToSerial(servoPosArr):
     global rollValueFiltered
@@ -46,10 +48,10 @@ def writeServoPositionsToSerial(servoPosArr):
     s = ":"
     strToSend = s.join((str(rollValueFiltered), str(pitchValueFiltered)))
 
-    # print(arduino)
-    arduino.write(bytes(strToSend, 'utf-8'))
-
-    # print(strToSend)
+    try:
+        arduino.write(bytes(strToSend, 'utf-8'))
+    except Exception as e:
+        print("Serial type: " + e)
 
 while True:
     time.sleep(millisecDelay/1000)
@@ -58,9 +60,13 @@ while True:
 
     viewportSize = [cap.get(3), cap.get(4)]
 
+    blackImg = np.zeros((int(viewportSize[1]), int(viewportSize[0]), 1), dtype = "uint8")
+
     bluredView = cv.GaussianBlur(frame, (11, 11), 0)
 
     hsv = cv.cvtColor(bluredView, cv.COLOR_BGR2HSV)
+
+    positionVirtualization = blackImg.copy()
 
     centerOfScreen = [int(viewportSize[0] / 2), int(viewportSize[1] / 2)]
 
@@ -80,14 +86,19 @@ while True:
 
     maskFiltered = ballLocalization.getMask(True)
 
+    ballCoordinates = ballLocalization.getCoordinates()
+
     if ballLocalization.isCntFound():
-        writeServoPositionsToSerial(ballLocalization.getCoordinates())
+        writeServoPositionsToSerial(ballCoordinates)
+
+    cv.circle(positionVirtualization, ballCoordinates, 15, (52, 155, 235), -1)
+    cv.arrowedLine(positionVirtualization, ballCoordinates, centerOfScreen, (255, 0, 0), 2)
 
     cv.circle(render, centerOfScreen, 3, (0,255,127), -1)
 
     cv.imshow('View', render)
-    cv.imshow('Mask', maskFiltered)
-    # cv.imshow('Mask', mask)
+    # cv.imshow('Mask', maskFiltered)
+    cv.imshow('Position Virtualization', positionVirtualization)
 
     if cv.waitKey(5) & 0xFF == 27:
         break
