@@ -1,12 +1,6 @@
 import time
-import cv2 as cv
-import numpy as np
 import serial
 import math
-import cvzone.FPS
-import pyautogui
-
-from localization import BallLocalization
 
 # Set up Constands
 BAUD_RATE = 9600
@@ -14,15 +8,6 @@ filterPercentage = 0.5
 millisecDelay = 50
 
 arduino = serial.Serial(port="COM6", baudrate=BAUD_RATE, timeout=.6)
-
-# Initialize CV
-fpsReader = cvzone.FPS()
-cap = cv.VideoCapture(0)
-if not cap.isOpened():
-    print("Cannot open camera")
-    exit()
-
-targetHSV = [0, 0, 0]
 
 rollValueFiltered = 90
 pitchValueFiltered = 90
@@ -59,10 +44,3 @@ while True:
         time.sleep(0.2)
 
     writeServoPositionsToSerial([counter, counter])
-
-
-    if cv.waitKey(5) & 0xFF == 27:
-        break
-    
-cap.release()
-cv.destroyAllWindows()
