@@ -4,6 +4,7 @@ import numpy as np
 import serial
 import math
 import cvzone.FPS
+import matplotlib.pyplot as plt
 
 from localization import BallLocalization
 
@@ -12,7 +13,7 @@ BAUD_RATE = 9600
 filterPercentage = 0.5
 millisecDelay = 50
 
-arduino = serial.Serial(port="COM6", baudrate=BAUD_RATE, timeout=.6)
+# arduino = serial.Serial(port="COM6", baudrate=BAUD_RATE, timeout=.6)
 
 # Initialize CV
 fpsReader = cvzone.FPS()
@@ -31,6 +32,9 @@ centerOfScreen = [0, 0]
 ballLocalization = BallLocalization()
 
 blackImg = np.zeros((512, 512, 1), dtype = "uint8")
+
+listOfErrorsX = []
+listOfErrorsY = []
 
 # Write Data to Serial
 def writeServoPositionsToSerial(servoPosArr):
@@ -54,7 +58,7 @@ def writeServoPositionsToSerial(servoPosArr):
         print("Serial type: " + e)
 
 while True:
-    time.sleep(millisecDelay/1000)
+    # time.sleep(millisecDelay/1000)
     ret, frame = cap.read();
     fps, img = fpsReader.update(frame, pos=(50, 80), color=(0, 255, 0), scale=2, thickness=5)
 
@@ -89,12 +93,19 @@ while True:
     ballCoordinates = ballLocalization.getCoordinates()
 
     if ballLocalization.isCntFound():
-        writeServoPositionsToSerial(ballCoordinates)
+        # writeServoPositionsToSerial(ballCoordinates)
+        listOfErrorsX.append(ballCoordinates[0]-centerOfScreen[0])
+        listOfErrorsY.append(ballCoordinates[1]-centerOfScreen[1])
 
     cv.circle(positionVirtualization, ballCoordinates, 15, (52, 155, 235), -1)
     cv.arrowedLine(positionVirtualization, ballCoordinates, centerOfScreen, (255, 0, 0), 2)
 
     cv.circle(render, centerOfScreen, 3, (0,255,127), -1)
+
+    # plt.plot(listOfErrorsX, label = "X Error")
+    # plt.plot(listOfErrorsY, label = "Y Error")
+    # plt.legend()
+    # plt.show()
 
     cv.imshow('View', render)
     # cv.imshow('Mask', maskFiltered)
