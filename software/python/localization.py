@@ -5,8 +5,10 @@ class BallLocalization:
     COLOR_ACCURACY = [8, 20, 100]
     OPEN_MORPH = 12
     CLOSE_MORPH = 28
+    FILTER_COEF = 0.6
 
     largestCntBoundingRect = [0, 0, 0, 0]
+    lastCoordinates = (500, 500)
 
     # def __init__(self, targetColor, targetPos):
     #     self.targetColor = targetColor
@@ -21,6 +23,12 @@ class BallLocalization:
 
         return finalMask
 
+    def filtering(self, coordinates):
+        temp = [0, 0]
+        temp[0] = int(coordinates[0] * (1-self.FILTER_COEF) + self.lastCoordinates[0] * self.FILTER_COEF)
+        temp[1] = int(coordinates[1] * (1-self.FILTER_COEF) + self.lastCoordinates[1] * self.FILTER_COEF)
+        return tuple(temp)
+
     def drawContourAspects(self, frame, contours, largestCntIndex):
         cv.drawContours(frame, contours, largestCntIndex, (255, 255, 0), 2)
 
@@ -30,7 +38,8 @@ class BallLocalization:
             self.largestCntBoundingRect = [x, y, w, h]
             cv.rectangle(frame, (x, y), (x + w, y + h), (0,0,255), 2)
             self.centerOfContour = (x + int(w/2), y + int(h/2))
-            cv.circle(frame, self.centerOfContour, 3, (0,255,127), -1)
+            self.lastCoordinates = self.filtering(self.centerOfContour)
+            cv.circle(frame, self.lastCoordinates, 3, (0,255,127), -1)
         else:
             self.contoursFound = False
 
@@ -95,6 +104,10 @@ class BallLocalization:
     def getCoordinates(self):
         if(self.centerOfContour):
             return self.centerOfContour
+        
+    def getFilteredCoordinates(self):
+        if(self.lastCoordinates):
+            return self.lastCoordinates
 
     def isCntFound(self):
         return self.contoursFound

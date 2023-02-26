@@ -4,7 +4,7 @@ import numpy as np
 import serial
 import math
 import cvzone.FPS
-import matplotlib.pyplot as plt
+# import matplotlib.pyplot as plt
 
 from localization import BallLocalization
 
@@ -90,6 +90,7 @@ while True:
 
     maskFiltered = ballLocalization.getMask(True)
 
+    ballCoordinates = ballLocalization.getFilteredCoordinates()
     ballCoordinates = ballLocalization.getCoordinates()
 
     if ballLocalization.isCntFound():
@@ -97,15 +98,10 @@ while True:
         listOfErrorsX.append(ballCoordinates[0]-centerOfScreen[0])
         listOfErrorsY.append(ballCoordinates[1]-centerOfScreen[1])
 
-    cv.circle(positionVirtualization, ballCoordinates, 15, (52, 155, 235), -1)
+    cv.circle(positionVirtualization, (ballCoordinates[0], ballCoordinates[1]), 15, (52, 155, 235), -1)
     cv.arrowedLine(positionVirtualization, ballCoordinates, centerOfScreen, (255, 0, 0), 2)
 
     cv.circle(render, centerOfScreen, 3, (0,255,127), -1)
-
-    # plt.plot(listOfErrorsX, label = "X Error")
-    # plt.plot(listOfErrorsY, label = "Y Error")
-    # plt.legend()
-    # plt.show()
 
     cv.imshow('View', render)
     # cv.imshow('Mask', maskFiltered)
