@@ -1,10 +1,9 @@
-import time
 import cv2 as cv
 import numpy as np
 import serial
 import math
 import cvzone.FPS
-# import matplotlib.pyplot as plt
+from apriltagging import AprilTagging
 
 from localization import BallLocalization
 
@@ -30,6 +29,7 @@ pitchValueFiltered = 90
 centerOfScreen = [0, 0]
 
 ballLocalization = BallLocalization()
+aprilTagDetector = AprilTagging()
 
 blackImg = np.zeros((512, 512, 1), dtype = "uint8")
 
@@ -83,15 +83,17 @@ while True:
         targetHSV[0] = (int(pixel1[0]) + int(pixel2[0]) + int(pixel3[0]) + int(pixel4[0])) / 4
         targetHSV[1] = (int(pixel1[1]) + int(pixel2[1]) + int(pixel3[1]) + int(pixel4[1])) / 4
         targetHSV[2] = (int(pixel1[2]) + int(pixel2[2]) + int(pixel3[2]) + int(pixel4[2])) / 4
+        print("Color Picked: ", targetHSV)
 
     ballLocalization.update(frame, hsv, viewportSize, targetHSV, centerOfScreen)
+    aprilTagDetector.update(frame)
 
     render = ballLocalization.getLocalizationRender()
 
     maskFiltered = ballLocalization.getMask(True)
 
     ballCoordinates = ballLocalization.getFilteredCoordinates()
-    ballCoordinates = ballLocalization.getCoordinates()
+    # ballCoordinates = ballLocalization.getCoordinates()
 
     if ballLocalization.isCntFound():
         # writeServoPositionsToSerial(ballCoordinates)

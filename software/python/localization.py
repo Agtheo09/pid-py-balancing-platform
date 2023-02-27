@@ -5,7 +5,7 @@ class BallLocalization:
     COLOR_ACCURACY = [8, 20, 100]
     OPEN_MORPH = 12
     CLOSE_MORPH = 28
-    FILTER_COEF = 0.6
+    FILTER_COEF = 0.4
 
     largestCntBoundingRect = [0, 0, 0, 0]
     lastCoordinates = (500, 500)
