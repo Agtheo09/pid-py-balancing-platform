@@ -10,7 +10,6 @@ from localization import BallLocalization
 # Set up Constands
 BAUD_RATE = 9600
 filterPercentage = 0.5
-millisecDelay = 50
 
 # arduino = serial.Serial(port="COM6", baudrate=BAUD_RATE, timeout=.6)
 
@@ -23,8 +22,8 @@ if not cap.isOpened():
 
 targetHSV = [0, 0, 0]
 
-rollValueFiltered = 90
-pitchValueFiltered = 90
+xValueFiltered = 90
+yValueFiltered = 90
 
 centerOfScreen = [0, 0]
 
@@ -33,36 +32,30 @@ aprilTagDetector = AprilTagging()
 
 blackImg = np.zeros((512, 512, 1), dtype = "uint8")
 
-listOfErrorsX = []
-listOfErrorsY = []
-
 # Write Data to Serial
-def writeServoPositionsToSerial(servoPosArr):
-    global rollValueFiltered
-    global pitchValueFiltered
-    
-    firstMap = servoPosArr[0]*(180/viewportSize[0])
-    secondMap = servoPosArr[1]*(180/viewportSize[1])
-    firstConvert = math.floor(firstMap)
-    secondConvert = math.floor(secondMap)
+def sendBallPos(contourCoordinates):
+    global xValueFiltered
+    global yValueFiltered
+
     #Filter Values
-    rollValueFiltered = math.floor((firstConvert * filterPercentage) + (rollValueFiltered * (1-filterPercentage)))
-    pitchValueFiltered = math.floor((secondConvert * filterPercentage) + (pitchValueFiltered * (1-filterPercentage)))
+    xValueFiltered = math.floor((contourCoordinates[0] * (1-filterPercentage)) + (xValueFiltered * filterPercentage))
+    yValueFiltered = math.floor((contourCoordinates[1] * (1-filterPercentage)) + (yValueFiltered * filterPercentage))
 
     s = ":"
-    strToSend = s.join((str(rollValueFiltered), str(pitchValueFiltered)))
+    strToSend = s.join((str(xValueFiltered), str(yValueFiltered)))
+    print(strToSend)
 
-    try:
-        arduino.write(bytes(strToSend, 'utf-8'))
-    except Exception as e:
-        print("Serial type: " + e)
+    # try:
+    #     arduino.write(bytes(strToSend, 'utf-8'))
+    # except Exception as e:
+    #     print("Serial type: " + e)
 
 while True:
-    # time.sleep(millisecDelay/1000)
     ret, frame = cap.read();
     fps, img = fpsReader.update(frame, pos=(50, 80), color=(0, 255, 0), scale=2, thickness=5)
 
     viewportSize = [cap.get(3), cap.get(4)]
+    print(viewportSize)
 
     blackImg = np.zeros((int(viewportSize[1]), int(viewportSize[0]), 1), dtype = "uint8")
 
@@ -96,9 +89,7 @@ while True:
     # ballCoordinates = ballLocalization.getCoordinates()
 
     if ballLocalization.isCntFound():
-        # writeServoPositionsToSerial(ballCoordinates)
-        listOfErrorsX.append(ballCoordinates[0]-centerOfScreen[0])
-        listOfErrorsY.append(ballCoordinates[1]-centerOfScreen[1])
+        sendBallPos(ballCoordinates)
 
     cv.circle(positionVirtualization, (ballCoordinates[0], ballCoordinates[1]), 15, (52, 155, 235), -1)
     cv.arrowedLine(positionVirtualization, ballCoordinates, centerOfScreen, (255, 0, 0), 2)
